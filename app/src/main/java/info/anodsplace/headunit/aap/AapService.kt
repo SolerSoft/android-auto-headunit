@@ -1,15 +1,16 @@
 package info.anodsplace.headunit.aap
 
-import android.app.Notification
-import android.app.PendingIntent
-import android.app.Service
-import android.app.UiModeManager
+import android.app.*
 import android.content.*
+import android.graphics.Color
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import info.anodsplace.headunit.App
 import info.anodsplace.headunit.R
 import info.anodsplace.headunit.aap.protocol.messages.NightModeEvent
@@ -30,6 +31,48 @@ class AapService : Service(), UsbReceiver.Listener, AccessoryConnection.Listener
     private var accessoryConnection: AccessoryConnection? = null
     private lateinit var usbReceiver: UsbReceiver
     private lateinit var nightModeReceiver: BroadcastReceiver
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(channelId: String, channelName: String): String{
+        val chan = NotificationChannel(channelId,
+                channelName, NotificationManager.IMPORTANCE_NONE)
+        chan.lightColor = Color.BLUE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(chan)
+        return channelId
+    }
+
+    private fun startForeground() {
+
+        // Determine channel ID based on SDK version
+        // See: https://stackoverflow.com/questions/47531742/startforeground-fail-after-upgrade-to-android-8-1
+        val channelId =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    createNotificationChannel("HeadUnitService", "HeadUnit Service")
+                } else {
+                    // If earlier version channel ID is not used
+                    // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
+                    App.defaultChannel
+                }
+
+
+        val notification = NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.drawable.ic_stat_aa)
+                .setTicker("HeadUnit is running")
+                .setWhen(System.currentTimeMillis())
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .setContentTitle("HeadUnit is running")
+                .setContentText("...")
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setContentIntent(PendingIntent.getActivity(this, 0, AapProjectionActivity.intent(this), PendingIntent.FLAG_UPDATE_CURRENT))
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .build()
+
+        startForeground(1, notification)
+    }
+
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -69,21 +112,10 @@ class AapService : Service(), UsbReceiver.Listener, AccessoryConnection.Listener
 
         uiModeManager.enableCarMode(0)
 
-        val notification = NotificationCompat.Builder(this, App.defaultChannel)
-                .setSmallIcon(R.drawable.ic_stat_aa)
-                .setTicker("HeadUnit is running")
-                .setWhen(System.currentTimeMillis())
-                .setContentTitle("HeadUnit is running")
-                .setContentText("...")
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setContentIntent(PendingIntent.getActivity(this, 0, AapProjectionActivity.intent(this), PendingIntent.FLAG_UPDATE_CURRENT))
-                .setPriority(Notification.PRIORITY_HIGH)
-                .build()
-
         startService(GpsLocationService.intent(this))
 
-        startForeground(1, notification)
+        // Overload creates notification and sets ID
+        startForeground()
 
         accessoryConnection!!.connect(this)
 

@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentActivity
 import info.anodsplace.headunit.App
 import info.anodsplace.headunit.R
 import info.anodsplace.headunit.aap.AapProjectionActivity
+import info.anodsplace.headunit.aap.AapService
 import info.anodsplace.headunit.utils.AppLog
 import info.anodsplace.headunit.utils.NetworkUtils
 import info.anodsplace.headunit.utils.hideSystemUI
@@ -37,6 +38,27 @@ class MainActivity : FragmentActivity() {
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.ACCESS_FINE_LOCATION
         ), permissionRequestCode)
+
+        self_button.setOnClickListener {
+            /*
+            supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.main_content, NetworkListFragment())
+                    .commit()
+             */
+
+            AppLog.i {"Starting service in Wifi mode"}
+            startService(AapService.createIntent("127.0.0.1", this))
+            // startService(AapService.createIntent("192.168.1.173", this))
+        }
+
+        project_button.setOnClickListener {
+            if (App.provide(this).transport.isAlive) {
+                val aapIntent = AapProjectionActivity.intent(this);
+                aapIntent.putExtra(AapProjectionActivity.EXTRA_FOCUS, true)
+                startActivity(aapIntent)
+            }
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
