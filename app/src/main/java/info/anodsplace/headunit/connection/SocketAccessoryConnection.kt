@@ -28,7 +28,8 @@ class SocketAccessoryConnection(private val mIp: String) : AccessoryConnection {
     override fun read(buf: ByteArray, offset: Int, length: Int, timeout: Int): Int {
         return try {
             mSocket.soTimeout = timeout
-            mInputStream!!.read(buf, offset, length)
+            mSocket.getInputStream().read(buf, offset, length)
+            // HACK: mInputStream!!.read(buf, offset, length)
         } catch (e: IOException) {
             -1
         }
@@ -43,7 +44,7 @@ class SocketAccessoryConnection(private val mIp: String) : AccessoryConnection {
                 mSocket.tcpNoDelay = true
                 mSocket.reuseAddress = true
                 mSocket.connect(InetSocketAddress(mIp, 5277), 3000)
-                mInputStream = BufferedInputStream(mSocket.getInputStream(), DEF_BUFFER_LENGTH)
+                // HACK: mInputStream = BufferedInputStream(mSocket.getInputStream(), DEF_BUFFER_LENGTH)
                 listener.onConnectionResult(mSocket.isConnected)
             } catch (e: IOException) {
                 AppLog.e(e)
@@ -62,7 +63,7 @@ class SocketAccessoryConnection(private val mIp: String) : AccessoryConnection {
             }
 
         }
-        mInputStream = null
+        // HACK: mInputStream = null
     }
 
     companion object {

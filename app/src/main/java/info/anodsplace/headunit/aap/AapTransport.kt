@@ -112,6 +112,7 @@ class AapTransport(
 
         if (!handshake(connection)) {
             AppLog.e { "Handshake failed" }
+            connection.disconnect() // If handshake failed, disconnect so AA will reset
             return false
         }
 
@@ -138,7 +139,7 @@ class AapTransport(
             return false
         }
 
-        ret = connection.read(buffer, 0, buffer.size, CONNECT_TIMEOUT)
+        ret = connection.read(buffer, 0, 12, CONNECT_TIMEOUT) // was buffer.size instead of 12
         if (ret <= 0) {
             AppLog.e { "Version request read ret: $ret" }
             return false

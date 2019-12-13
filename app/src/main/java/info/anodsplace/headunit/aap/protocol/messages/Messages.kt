@@ -11,7 +11,7 @@ import info.anodsplace.headunit.aap.Utils
 
 object Messages {
     const val DEF_BUFFER_LENGTH = 131080
-    var VERSION_REQUEST = byteArrayOf(0, 1, 0, 1)
+    var VERSION_REQUEST = byteArrayOf(0, 1, 0, 2)
 
     fun createRawMessage(chan: Int, flags: Int, type: Int, data: ByteArray): ByteArray {
         val size = data.size
