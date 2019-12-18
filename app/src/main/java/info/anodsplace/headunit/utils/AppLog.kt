@@ -5,9 +5,15 @@ import android.util.Log
 typealias MessageProducer = () -> String
 
 object AppLog {
-    const val LOG_LEVEL = Log.ERROR
+    const val LOG_LEVEL = Log.VERBOSE
 
     const val TAG = "HeadUnit"
+
+    inline fun v(messageProducer: MessageProducer) {
+        if (LOG_LEVEL <= Log.VERBOSE) {
+            Log.d(TAG, messageProducer())
+        }
+    }
 
     inline fun d(messageProducer: MessageProducer) {
         if (LOG_LEVEL <= Log.DEBUG) {

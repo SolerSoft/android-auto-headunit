@@ -133,18 +133,20 @@ class AapTransport(
         // Version request
 
         val versionRequest = Messages.createRawMessage(0, 3, 1, Messages.VERSION_REQUEST) // Version Request
+        AppLog.v { "Send version request: ${bytesToHex(versionRequest)}"}
         var ret = connection.write(versionRequest, 0, versionRequest.size, CONNECT_TIMEOUT)
         if (ret < 0) {
             AppLog.e { "Version request sendEncrypted ret: $ret" }
             return false
         }
 
-        ret = connection.read(buffer, 0, 12, CONNECT_TIMEOUT) // was buffer.size instead of 12
+        ret = connection.read(buffer, 0, buffer.size, CONNECT_TIMEOUT) // was buffer.size instead of 12
         if (ret <= 0) {
             AppLog.e { "Version request read ret: $ret" }
             return false
         }
         AppLog.i { "Version response read ret: $ret" }
+        AppLog.v { "Received version response: ${bytesToHex(buffer, ret)}"}
 
         ssl.prepare()
         var handshakeCounter = 0
@@ -153,7 +155,7 @@ class AapTransport(
 
             val bio = Messages.createRawMessage(Channel.ID_CTR, 3, 3, sentHandshakeData)
             connection.write(bio, 0, bio.size)
-            AppLog.i { "TxData was: ${bytesToHex(sentHandshakeData)}"}
+            AppLog.v { "TxData was: ${bytesToHex(sentHandshakeData)}"}
 
             val size = connection.read(buffer, 0, buffer.size)
             if (size <= 0) {
@@ -163,7 +165,7 @@ class AapTransport(
 
             val receivedHandshakeData = ByteArray(size - 6)
             System.arraycopy(buffer, 6, receivedHandshakeData, 0, size - 6)
-            AppLog.i { "RxData was: ${bytesToHex(receivedHandshakeData)}" }
+            AppLog.v { "RxData was: ${bytesToHex(receivedHandshakeData)}" }
             ssl.handshakeWrite(receivedHandshakeData)
         }
 
