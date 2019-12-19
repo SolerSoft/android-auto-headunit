@@ -1,6 +1,8 @@
 package info.anodsplace.headunit.aap
 
 import info.anodsplace.headunit.aap.protocol.messages.Messages.DEF_BUFFER_LENGTH
+import info.anodsplace.headunit.utils.AppLog
+import info.anodsplace.headunit.utils.bytesToHex
 import java.nio.ByteBuffer
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
@@ -23,6 +25,9 @@ object AapSslImpl: AapSsl {
         val session = newSslEngine.session
         val appBufferMax = session.applicationBufferSize
         val netBufferMax = session.packetBufferSize
+
+        AppLog.v { "appBufferMax: $appBufferMax"}
+        AppLog.v { "netBufferMax: $netBufferMax"}
 
         sslEngine = newSslEngine
         txBuffer = ByteBuffer.allocateDirect(netBufferMax)
